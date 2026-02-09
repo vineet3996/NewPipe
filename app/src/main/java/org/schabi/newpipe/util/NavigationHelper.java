@@ -45,6 +45,7 @@ import org.schabi.newpipe.extractor.stream.VideoStream;
 import org.schabi.newpipe.fragments.MainFragment;
 import org.schabi.newpipe.fragments.detail.VideoDetailFragment;
 import org.schabi.newpipe.fragments.list.channel.ChannelFragment;
+import org.schabi.newpipe.fragments.list.comments.CommentsFragment;
 import org.schabi.newpipe.fragments.list.comments.CommentRepliesFragment;
 import org.schabi.newpipe.fragments.list.kiosk.KioskFragment;
 import org.schabi.newpipe.fragments.list.playlist.PlaylistFragment;
@@ -501,11 +502,68 @@ public final class NavigationHelper {
 
     public static void openCommentRepliesFragment(@NonNull final FragmentActivity activity,
                                                   @NonNull final CommentsInfoItem comment) {
+        // First, try to find an existing CommentsFragment anywhere in the activity's
+        // fragment tree and if found ask it to show the replies overlay.
+        try {
+            final CommentsFragment found = findCommentsFragmentInManager(activity.getSupportFragmentManager());
+            if (found != null) {
+                found.showRepliesOverlay(comment);
+                return;
+            }
+        } catch (final Exception e) {
+            // ignore and fallback
+        }
+
+        // If not found, check if a VideoDetailFragment exists in fragment_player_holder
+        // and ask it to show the overlay via its helper.
+        try {
+            final Fragment player = activity.getSupportFragmentManager()
+                    .findFragmentById(R.id.fragment_player_holder);
+            if (player instanceof VideoDetailFragment) {
+                if (((VideoDetailFragment) player).showRepliesOverlayForComment(comment)) {
+                    return;
+                }
+            }
+        } catch (final Exception e) {
+            // ignore and continue
+        }
+
+        // Also check fragment_holder in case the VideoDetailFragment is hosted there
+        try {
+            final Fragment fHolder = activity.getSupportFragmentManager()
+                    .findFragmentById(R.id.fragment_holder);
+            if (fHolder instanceof VideoDetailFragment) {
+                if (((VideoDetailFragment) fHolder).showRepliesOverlayForComment(comment)) {
+                    return;
+                }
+            }
+        } catch (final Exception e) {
+            // ignore and continue
+        }
+
+        // Fallback to previous behavior: open a standalone CommentRepliesFragment
         defaultTransaction(activity.getSupportFragmentManager())
                 .replace(R.id.fragment_holder, new CommentRepliesFragment(comment),
                         CommentRepliesFragment.TAG)
                 .addToBackStack(CommentRepliesFragment.TAG)
                 .commit();
+    }
+
+    private static CommentsFragment findCommentsFragmentInManager(
+            @NonNull final FragmentManager fm) {
+        for (final Fragment fragment : fm.getFragments()) {
+            if (fragment instanceof CommentsFragment) {
+                return (CommentsFragment) fragment;
+            }
+            if (fragment != null) {
+                final CommentsFragment child = findCommentsFragmentInManager(
+                        fragment.getChildFragmentManager());
+                if (child != null) {
+                    return child;
+                }
+            }
+        }
+        return null;
     }
 
     public static void openPlaylistFragment(final FragmentManager fragmentManager,

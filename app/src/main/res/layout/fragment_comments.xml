@@ -68,4 +68,44 @@
         android:background="?attr/toolbar_shadow"
         android:visibility="gone" />
 
+    <!-- Replies overlay (initially hidden). We'll host the replies fragment here as a child fragment -->
+    <RelativeLayout
+        android:id="@+id/replies_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="?attr/windowBackground">
+        <RelativeLayout
+            android:id="@+id/replies_overlay_topbar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="?attr/colorPrimary">
+            <ImageButton
+                android:id="@+id/replies_back_button"
+                android:layout_alignParentStart="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_back"
+                android:layout_height="match_parent"
+                android:layout_width="wrap_content"/>
+            <TextView
+                android:id="@+id/replies_overlay_title"
+                android:layout_width="wrap_content"
+                android:elevation="4dp"
+                android:textSize="16sp"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@id/replies_back_button"
+                android:gravity="center_vertical"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                android:textColor="@android:color/white"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+        <FrameLayout
+            android:id="@+id/replies_fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/replies_overlay_topbar" />
+
+    </RelativeLayout>
 </RelativeLayout>
+

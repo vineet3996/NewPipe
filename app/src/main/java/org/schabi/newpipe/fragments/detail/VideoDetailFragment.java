@@ -1038,6 +1038,50 @@ public final class VideoDetailFragment
         }
     }
 
+    /**
+     * If the Comments tab is present inside this VideoDetailFragment, show the replies overlay
+     * on top of it. Returns true if the overlay was shown (or is scheduled to be shown).
+     * @param comment the comment for which to show the replies overlay
+     * @return true if the overlay was shown or is scheduled to be shown, false if the Comments tab
+     * is not present or if the overlay could not be shown for any reason
+     */
+    public boolean showRepliesOverlayForComment(@NonNull final CommentsInfoItem comment) {
+        final int commentsTabPos = pageAdapter.getItemPositionByTitle(COMMENTS_TAB_TAG);
+        if (commentsTabPos == -1) {
+            return false;
+        }
+
+        final Fragment fragment = pageAdapter.getItem(commentsTabPos);
+        if (!(fragment instanceof CommentsFragment)) {
+            return false;
+        }
+
+        // ensure comments tab is visible / selected
+        // and app bar collapsed so overlay appears over it
+        binding.appBarLayout.setExpanded(false, false);
+        binding.viewPager.setCurrentItem(commentsTabPos, false);
+
+        final CommentsFragment commentsFragment = (CommentsFragment) fragment;
+        // If the fragment view is already created, show overlay immediately
+        if (commentsFragment.getView() != null) {
+            commentsFragment.showRepliesOverlay(comment);
+        } else {
+            // Otherwise, post to the view pager to allow the fragment
+            // to be created and then show overlay
+            binding.viewPager.post(() -> {
+                final Fragment f = pageAdapter.getItem(commentsTabPos);
+                if (f instanceof CommentsFragment) {
+                    try {
+                        ((CommentsFragment) f).showRepliesOverlay(comment);
+                    } catch (final Exception ignored) {
+                        // ignore failures here and let NavigationHelper fallback if needed
+                    }
+                }
+            });
+        }
+        return true;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
     // Play Utils
     //////////////////////////////////////////////////////////////////////////*/
