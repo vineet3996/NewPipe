@@ -63,9 +63,12 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import org.schabi.newpipe.App;
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.database.stream.model.StreamEntity;
+import org.schabi.newpipe.local.feed.StreamUpdateViewModel;
 import org.schabi.newpipe.databinding.FragmentVideoDetailBinding;
 import org.schabi.newpipe.download.DownloadDialog;
 import org.schabi.newpipe.error.ErrorInfo;
@@ -211,6 +214,8 @@ public final class VideoDetailFragment
     private Disposable currentWorker;
     @NonNull
     private final CompositeDisposable disposables = new CompositeDisposable();
+    private StreamUpdateViewModel streamUpdateViewModel;
+
     @Nullable
     private Disposable positionSubscriber = null;
 
@@ -619,6 +624,9 @@ public final class VideoDetailFragment
     @Override // called from onViewCreated in {@link BaseFragment#onViewCreated}
     protected void initViews(final View rootView, final Bundle savedInstanceState) {
         super.initViews(rootView, savedInstanceState);
+
+        streamUpdateViewModel = new ViewModelProvider(requireActivity())
+                .get(StreamUpdateViewModel.class);
 
         pageAdapter = new TabAdapter(getChildFragmentManager());
         binding.viewPager.setAdapter(pageAdapter);
@@ -1628,6 +1636,11 @@ public final class VideoDetailFragment
         binding.detailControlsPopup.setVisibility(noVideoStreams ? View.GONE : View.VISIBLE);
         binding.detailThumbnailPlayButton.setImageResource(
                 noVideoStreams ? R.drawable.ic_headset_shadow : R.drawable.ic_play_arrow_shadow);
+
+        // Notify FeedFragment that this stream's data (including view count) has been updated
+        if (streamUpdateViewModel != null) {
+            streamUpdateViewModel.notifyStreamInfoUpdated(info.getServiceId(), info.getUrl());
+        }
     }
 
     private void displayUploaderAsSubChannel(final StreamInfo info) {

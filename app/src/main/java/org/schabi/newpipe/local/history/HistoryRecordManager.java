@@ -44,6 +44,7 @@ import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.local.feed.FeedViewModel;
+import org.schabi.newpipe.local.feed.StreamUpdateViewModel;
 import org.schabi.newpipe.player.playqueue.PlayQueueItem;
 import org.schabi.newpipe.util.ExtractorHelper;
 
@@ -260,7 +261,10 @@ public class HistoryRecordManager {
             if (state.isValid(info.getDuration())) {
                 streamStateTable.upsert(state);
             }
-        })).subscribeOn(Schedulers.io());
+        })).subscribeOn(Schedulers.io())
+                .doOnComplete(() -> StreamUpdateViewModel.postProgressUpdate(
+                        info.getServiceId(), info.getUrl()
+                ));
     }
 
     public Single<StreamStateEntity[]> loadStreamState(final InfoItem info) {
